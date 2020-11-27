@@ -31,6 +31,7 @@ Route::get(
         'investments'
     ]
 );
-Route::apiResource('strategy', StrategyController::class);
+Route::apiResource('strategy', StrategyController::class)
+    ->middleware('jwt');
 Route::apiResource('user', UserController::class);
 Route::apiResource('investment', InvestmentController::class);
