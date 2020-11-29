@@ -23,30 +23,37 @@ class CheckJWT {
         $auth0 = App::make('auth0');
 
         $accessToken = $request->bearerToken();
-        try {
-            $tokenInfo = $auth0->decodeJWT($accessToken);
-            $user = $this->userRepository->getUserByDecodedJWT($tokenInfo);
-            if (!$user) {
+        if ($accessToken) {
+            try {
+                $tokenInfo = $auth0->decodeJWT($accessToken);
+                $user = $this->userRepository->getUserByDecodedJWT($tokenInfo);
+                if (!$user) {
+                    return response()->json(
+                        ["message" => "Unauthorized user"],
+                        Response::HTTP_UNAUTHORIZED
+                    );
+                }
+
+            }
+            catch (InvalidTokenException $e) {
                 return response()->json(
-                    ["message" => "Unauthorized user"],
+                    ["message" => $e->getMessage()],
+                    Response::HTTP_UNAUTHORIZED
+                );
+            }
+            catch (CoreException $e) {
+                return response()->json(
+                    ["message" => $e->getMessage()],
                     Response::HTTP_UNAUTHORIZED
                 );
             }
 
-        }
-        catch (InvalidTokenException $e) {
+            return $next($request);
+        } else {
             return response()->json(
-                ["message" => $e->getMessage()],
+                ["message" => "No authorization token was found"],
                 Response::HTTP_UNAUTHORIZED
             );
         }
-        catch (CoreException $e) {
-            return response()->json(
-                ["message" => $e->getMessage()],
-                Response::HTTP_UNAUTHORIZED
-            );
-        }
-
-        return $next($request);
     }
 }
